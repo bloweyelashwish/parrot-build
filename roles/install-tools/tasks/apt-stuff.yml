@@ -1,29 +1,34 @@
 ---
 - name: "Updating apt repo/cache"
-  apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+    cache_valid_time: 3600
   become: true
   become_method: sudo
 
 - name: "Upgrade all packages"
-  apt: upgrade=yes force_apt_get=yes
+  apt:
+    upgrade: yes
+    force_apt_get: yes
   become: true
   become_method: sudo
 
 - name: "Remove unofficial docker images"
   package:
-    name: 
+    name:
       - docker.io
       - docker-compose
       - docker-doc
       - podman-docker
     state: absent
-  register: docker_remove  
+  register: docker_remove
   become: true
   become_method: sudo
 
 - name: "Remove NetExec - We want to use pipx for this"
   package:
-    name: 
+    name:
       - netexec
     state: absent
   become: true
@@ -31,7 +36,7 @@
 
 - name: "Remove Containerd/Runc"
   package:
-    name: 
+    name:
       - containerd
       - runc
     state: absent
@@ -55,29 +60,33 @@
   become: true
   become_method: sudo
 
-- name: "Add Docker keyring to apt"
-  apt_key:
-    url: "https://download.docker.com/linux/debian/gpg"
-    state: present
+- name: "Create keyrings directory"
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+  become_method: sudo
+
+- name: "Download Docker GPG key"
+  get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
   become: true
   become_method: sudo
 
 - name: "Install Docker Repository"
   apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ distribution }} stable"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ distribution }} stable"
     state: present
     update_cache: yes
   become: true
   become_method: sudo
 
-- name: "Upgrade all packages"
-  apt: upgrade=yes force_apt_get=yes
-  become: true
-  become_method: sudo
-
 - name: "Install Docker"
   package:
-    name: 
+    name:
       - docker-ce
       - docker-ce-cli
       - containerd.io
@@ -86,3 +95,4 @@
     state: latest
   become: true
   become_method: sudo
+
