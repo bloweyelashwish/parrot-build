@@ -1,4 +1,11 @@
 ---
+- name: "Remove conflicting Microsoft VSCode repo sources"
+  shell: rm -f /etc/apt/sources.list.d/*microsoft* /etc/apt/sources.list.d/*vscode*
+  args:
+    removes: /etc/apt/sources.list.d/
+  become: true
+  become_method: sudo
+
 - name: "Updating apt repo/cache"
   apt:
     update_cache: yes
